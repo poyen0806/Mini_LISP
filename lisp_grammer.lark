@@ -1,0 +1,77 @@
+// 程式入口
+program: stmt+
+
+// 語句定義
+stmt: expr -> eval_expr
+    | print_stmt -> eval_expr
+
+// 打印語句
+?print_stmt : "(" "print-num" expr ")" -> print_num
+            | "(" "print-bool" expr ")" -> print_bool
+
+// 表達式定義
+?expr   :BOOL_VAL -> boolean
+        | NUMBER_VAL -> number
+        | num_op
+        | logical_op
+        | if_expr
+
+// 數字運算操作符
+?num_op : plus 
+        | minus 
+        | mult
+        | div
+        | mod 
+        | greater 
+        | smaller 
+        | equal
+
+// 加法
+?plus: "(" "+" expr expr+ ")" -> plus
+
+// 減法
+?minus: "(" "-" expr expr+ ")" -> minus
+
+// 乘法
+?mult: "(" "*" expr expr+ ")" -> mult
+
+// 除法
+?div: "(" "/" expr expr+ ")" -> div
+
+// 取餘
+?mod: "(" "mod" expr expr+ ")" -> mod
+
+// 大於
+?greater: "(" ">" expr expr+ ")" -> greater
+
+// 小於
+?smaller: "(" "<" expr expr+ ")" -> smaller
+
+// 等於
+?equal: "(" "=" expr expr+ ")" -> equal
+
+// 邏輯運算操作符
+?logical_op : and_op
+            | or_op
+            | not_op
+
+// AND 運算
+?and_op: "(" "and" expr expr+ ")" -> and_op
+
+// OR 運算
+?or_op: "(" "or" expr expr+ ")" -> or_op
+
+// NOT 運算
+?not_op: "(" "not" expr ")" -> not_op
+
+// IF 條件表達式
+?if_expr: "(" "if" expr expr expr ")" -> if_expr
+
+// 布林值定義：#t 或 #f
+BOOL_VAL: "#t" | "#f"
+
+// 數字值定義
+NUMBER_VAL: "0" | /[1-9][0-9]*/ | /-[1-9][0-9]*/
+
+// 忽略特定字符
+%ignore /[ \t\r\n]+/

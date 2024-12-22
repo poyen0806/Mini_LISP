@@ -4,5 +4,8 @@ build/
 # 忽略 .venv 資料夾
 .venv/
 
-# 忽略所有 .egg-info 資料夾
+# 忽略所有 egg-info 資料夾
 *.egg-info/
+
+# 忽略所有 pycache 資料夾
+*/__pycache__
