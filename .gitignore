@@ -1,0 +1,8 @@
+# 忽略 build 資料夾
+build/
+
+# 忽略 .venv 資料夾
+.venv/
+
+# 忽略所有 .egg-info 資料夾
+*.egg-info/
