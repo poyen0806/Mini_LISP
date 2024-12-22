@@ -4,14 +4,22 @@ program: stmt+
 // 語句定義
 stmt: expr -> eval_expr
     | print_stmt -> eval_expr
+    | define_stmt -> eval_expr
 
 // 打印語句
 ?print_stmt : "(" "print-num" expr ")" -> print_num
             | "(" "print-bool" expr ")" -> print_bool
 
+// 定義語句
+?define_stmt: "(" "define" variable expr ")" -> define_func
+
+// 變數定義
+?variable: ID
+
 // 表達式定義
-?expr   :BOOL_VAL -> boolean
+?expr   : BOOL_VAL -> boolean
         | NUMBER_VAL -> number
+        | ID -> variable
         | num_op
         | logical_op
         | if_expr
@@ -72,6 +80,9 @@ BOOL_VAL: "#t" | "#f"
 
 // 數字值定義
 NUMBER_VAL: "0" | /[1-9][0-9]*/ | /-[1-9][0-9]*/
+
+// 變數名稱定義
+ID: /[a-z]([a-z]|[0-9]|\-)*/
 
 // 忽略特定字符
 %ignore /[ \t\r\n]+/

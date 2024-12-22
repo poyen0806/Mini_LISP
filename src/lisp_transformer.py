@@ -6,6 +6,13 @@ class LispTransformer:
     def __init__(self):
         self.variables = {}
 
+    # 定義變數
+    def define_func(self, args):
+        var_name = args[0]  # 變數名稱
+        value = args[1]  # 表達式的值
+        self.variables[var_name] = value
+        return value
+
     # 解析數字
     def number(self, token):
         return int(token)
@@ -15,7 +22,14 @@ class LispTransformer:
         if isinstance(token, str):
             return token == "#t"  # 字串 "#t" 轉換為 True，"#f" 轉換為 False
         return token  # 如果已經是布林值，直接返回
-
+    
+    # 查詢變數
+    def variable(self, var_name):
+        if var_name in self.variables:
+            return self.variables[var_name]
+        else:
+            raise ValueError(f"未定義變數: {var_name}")
+    
     # 數字運算
     def plus(self, args):
         return sum(args)
@@ -30,6 +44,8 @@ class LispTransformer:
         return result
 
     def div(self, args):
+        if args[1] == 0:
+            raise ValueError("除數不能為零")
         return args[0] // args[1]
 
     def mod(self, args):
@@ -71,6 +87,11 @@ class LispTransformer:
         print('#t' if self.boolean(args[0]) else '#f')  # 確保布林值正確處理
         return args[0]
 
-    # 計算表達式
+    # 評估表達式
     def eval_expr(self, args):
-        return args[0]
+        if isinstance(args, str):  # 假設是變數名稱
+            return self.variable(args)
+        elif isinstance(args, int):  # 數字
+            return args
+        else:
+            raise ValueError(f"無法處理此表達式: {args}")

@@ -1,8 +1,8 @@
 import logging
-from lark import Lark, exceptions
+from lark import Lark, exceptions, Tree
 from lisp_transformer import LispTransformer
 
-# 設定日志
+# 設定日誌
 logger = logging.getLogger("mlisp")
 
 # 加載 Lark 解析器
@@ -12,12 +12,108 @@ def load_parser():
     parser = Lark(grammar, start='program', parser='lalr')
     return parser
 
+# 遞歸執行語法樹節點
+def eval_expr(tree, transformer):
+    if isinstance(tree, Tree):
+        # 根據節點類型分派處理
+        if tree.data == "program":
+            # 遍歷每個子節點，執行並收集結果
+            results = []
+            for child in tree.children:
+                result = eval_expr(child, transformer)
+                if result is not None:
+                    results.append(result)
+            return results
+
+        elif tree.data == "eval_expr":
+            # 對 `eval_expr` 節點進行遞歸處理
+            return eval_expr(tree.children[0], transformer)
+
+        elif tree.data == "define_func":
+            var_name = tree.children[0].value  # 第一個子節點是變數名稱
+            value = eval_expr(tree.children[1], transformer)  # 第二個子節點是變數值
+            return transformer.define_func([var_name, value])
+
+        elif tree.data == "print_num":
+            value = eval_expr(tree.children[0], transformer)  # 評估子節點
+            return transformer.print_num([value])
+        
+        elif tree.data == "print_bool":
+            value = eval_expr(tree.children[0], transformer)
+            return transformer.print_bool([value])
+
+        elif tree.data == "plus":
+            args = [eval_expr(child, transformer) for child in tree.children]
+            return transformer.plus(args)
+        
+        elif tree.data == "minus":
+            args = [eval_expr(child, transformer) for child in tree.children]
+            return transformer.minus(args)
+        
+        elif tree.data == "mult":
+            args = [eval_expr(child, transformer) for child in tree.children]
+            return transformer.mult(args)
+        
+        elif tree.data == "div":
+            args = [eval_expr(child, transformer) for child in tree.children]
+            return transformer.div(args)
+        
+        elif tree.data == "mod":
+            args = [eval_expr(child, transformer) for child in tree.children]
+            return transformer.mod(args)
+        
+        elif tree.data == "greater":
+            args = [eval_expr(child, transformer) for child in tree.children]
+            return transformer.greater(args)
+        
+        elif tree.data == "smaller":
+            args = [eval_expr(child, transformer) for child in tree.children]
+            return transformer.smaller(args)
+        
+        elif tree.data == "equal":
+            args = [eval_expr(child, transformer) for child in tree.children]
+            return transformer.equal(args)
+        
+        elif tree.data == "and_op":
+            args = [eval_expr(child, transformer) for child in tree.children]
+            return transformer.and_op(args)
+        
+        elif tree.data == "or_op":
+            args = [eval_expr(child, transformer) for child in tree.children]
+            return transformer.or_op(args)
+        
+        elif tree.data == "not_op":
+            args = [eval_expr(child, transformer) for child in tree.children]
+            return transformer.not_op(args)
+        
+        elif tree.data == "if_expr":
+            args = [eval_expr(child, transformer) for child in tree.children]
+            return transformer.if_expr(args)
+
+        elif tree.data == "number":
+            return transformer.number(tree.children[0].value)
+        
+        elif tree.data == "boolean":
+            return transformer.boolean(tree.children[0].value)
+
+        elif tree.data == "variable":
+            var_name = tree.children[0].value
+            if var_name in transformer.variables:
+                return transformer.variables[var_name]
+            else:
+                raise ValueError(f"未定義的變數: {var_name}")
+
+        else:
+            raise ValueError(f"未知的節點類型: {tree.data}")
+    else:
+        raise ValueError(f"無法處理的節點類型: {type(tree)}")
+
 # 解釋器主程序
 def interpret_lisp(code: str):
-    # 讀取並解析程式碼
     parser = load_parser()
-    
+
     try:
+        # 解析程式碼
         tree = parser.parse(code)
     except exceptions.LarkError as e:
         print(f"Syntax Error: {e}")
@@ -26,104 +122,24 @@ def interpret_lisp(code: str):
             print(f"Expected: {e.expected}")
             print(f"Location: Line {e.line}, Column {e.column}")
             print(f"Previous tokens: {e.token_history}")
-        return
+        return None
 
-    # 顯示解析的語法樹 (debug 用)
-    # print("Parsed Tree:", tree)
+    # 顯示解析的語法樹 (Debug 用)
+    # print("Parsed Tree:")
+    # print(tree.pretty())
 
     # 使用 Transformer 執行 LISP 程式
     transformer = LispTransformer()
-    result = eval_expr(tree, transformer)  # 傳遞語法樹和 transformer 物件
-    return result
-
-def eval_expr(tree, transformer):
-    # 如果是 program 節點，遞迴處理其子節點
-    if tree.data == 'program':
-        results = []
-        for child in tree.children:
-            result = eval_expr(child, transformer)
-            if result is not None:
-                results.append(result)
-        return results
-
-    # 如果是 eval_expr 節點，處理其中的子節點
-    elif tree.data == 'eval_expr':
-        # eval_expr 的子節點是 print_num 或其他表達式
-        return eval_expr(tree.children[0], transformer)
-
-    # 處理 print_num 節點
-    elif tree.data == 'print_num':
-        num_val = eval_expr(tree.children[0], transformer)
-        return transformer.print_num([num_val])
-
-    # 處理 print_bool 節點
-    elif tree.data == 'print_bool':
-        bool_val = eval_expr(tree.children[0], transformer)
-        return transformer.print_bool([bool_val])
-
-    # 處理布林值
-    elif tree.data == 'boolean':
-        return transformer.boolean(tree.children[0])
-
-    # 處理 number 節點
-    elif tree.data == 'number':
-        return transformer.number(tree.children[0])
-
-    # 處理加法
-    elif tree.data == 'plus':
-        return transformer.plus([eval_expr(child, transformer) for child in tree.children])
-
-    # 處理減法
-    elif tree.data == 'minus':
-        return transformer.minus([eval_expr(child, transformer) for child in tree.children])
-
-    # 處理乘法
-    elif tree.data == 'mult':
-        return transformer.mult([eval_expr(child, transformer) for child in tree.children])
-
-    # 處理除法
-    elif tree.data == 'div':
-        return transformer.div([eval_expr(child, transformer) for child in tree.children])
-
-    # 處理取餘
-    elif tree.data == 'mod':
-        return transformer.mod([eval_expr(child, transformer) for child in tree.children])
-
-    # 處理大於
-    elif tree.data == 'greater':
-        return transformer.greater([eval_expr(child, transformer) for child in tree.children])
-
-    # 處理小於
-    elif tree.data == 'smaller':
-        return transformer.smaller([eval_expr(child, transformer) for child in tree.children])
-
-    # 處理等於
-    elif tree.data == 'equal':
-        return transformer.equal([eval_expr(child, transformer) for child in tree.children])
-
-    # 處理邏輯運算
-    elif tree.data == 'and_op':
-        return transformer.and_op([eval_expr(child, transformer) for child in tree.children])
-
-    elif tree.data == 'or_op':
-        return transformer.or_op([eval_expr(child, transformer) for child in tree.children])
-
-    elif tree.data == 'not_op':
-        return transformer.not_op([eval_expr(child, transformer) for child in tree.children])
-
-    # 處理 if 表達式
-    elif tree.data == 'if_expr':
-        args = [eval_expr(child, transformer) for child in tree.children]
-        return transformer.if_expr(args)
-
-    # 其他情況
-    else:
-        print(f"Unknown expression: {tree.data}")
+    try:
+        result = eval_expr(tree, transformer)  # 傳遞語法樹和 Transformer
+    except ValueError as e:
+        print(f"Runtime Error: {e}")
         return None
 
-# 測試範例
+    return result
+
 if __name__ == "__main__":
-    with open("public_test_data/05_2.lsp", "r", encoding="utf-8") as file:
+    with open("public_test_data/07_1.lsp", "r", encoding="utf-8") as file:
         code = file.read()
 
     interpret_lisp(code)
