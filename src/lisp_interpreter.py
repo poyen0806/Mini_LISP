@@ -1,6 +1,7 @@
 import logging
 from lark import Lark, exceptions, Tree
 from lisp_transformer import LispTransformer
+from colorama import init, Fore
 
 # 設定日誌
 logger = logging.getLogger("mlisp")
@@ -139,7 +140,29 @@ def interpret_lisp(code: str):
     return result
 
 if __name__ == "__main__":
-    with open("public_test_data/07_1.lsp", "r", encoding="utf-8") as file:
-        code = file.read()
+    # 初始化 colorama
+    init(autoreset=True)
+    
+    # 要執行的檔案
+    test_files = [
+        "public_test_data/01_1.lsp",
+        "public_test_data/01_2.lsp",
+        "public_test_data/02_1.lsp",
+        "public_test_data/02_2.lsp",
+        "public_test_data/03_1.lsp",
+        "public_test_data/03_2.lsp",
+        "public_test_data/04_1.lsp",
+        "public_test_data/04_2.lsp",
+        "public_test_data/05_1.lsp",
+        "public_test_data/05_2.lsp",
+        "public_test_data/06_1.lsp",
+        "public_test_data/06_2.lsp"
+    ]
 
-    interpret_lisp(code)
+    # 依序執行每個檔案
+    for file_path in test_files:
+        print(Fore.LIGHTBLUE_EX + f"執行檔案: {file_path}")
+        with open(file_path, "r", encoding="utf-8") as file:
+            code = file.read()
+        
+        interpret_lisp(code)
