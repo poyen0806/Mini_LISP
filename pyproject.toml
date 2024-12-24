@@ -7,7 +7,7 @@ license = {text = "MIT"}
 authors = [
     {name = "Po Yen, Wu", email = "leo33917888@gmail.com"}
 ]
-requires-python = "==3.9.12"
+requires-python = "==3.9.*"
 
 dependencies = [
     "lark-parser==0.12.0",
