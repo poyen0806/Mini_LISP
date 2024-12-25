@@ -1,14 +1,14 @@
 import logging
 from lark import Lark, exceptions, Tree
-from lisp_transformer import LispTransformer
 from colorama import init, Fore
+from lisp_transformer import LispTransformer
 
 # 設定日誌
 logger = logging.getLogger("mlisp")
 
 # 加載 Lark 解析器
 def load_parser():
-    with open("lisp_grammer.lark", "r", encoding="utf-8") as file:
+    with open("lisp_grammar.lark", "r", encoding="utf-8") as file:
         grammar = file.read()
     parser = Lark(grammar, start='program', parser='lalr')
     return parser
@@ -139,10 +139,10 @@ def interpret_lisp(code: str):
 
     return result
 
+# 初始化 colorama
+init(autoreset=True)
+
 if __name__ == "__main__":
-    # 初始化 colorama
-    init(autoreset=True)
-    
     # 要執行的檔案
     test_files = [
         "public_test_data/01_1.lsp",
@@ -164,5 +164,5 @@ if __name__ == "__main__":
         print(Fore.LIGHTBLUE_EX + f"執行檔案: {file_path}")
         with open(file_path, "r", encoding="utf-8") as file:
             code = file.read()
-        
+
         interpret_lisp(code)
